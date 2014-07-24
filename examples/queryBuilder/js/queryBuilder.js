@@ -3,6 +3,7 @@
   var firebaseUrl = "https://" + generateRandomString(10) + ".firebaseio-demo.com/";
   var firebaseRef = new Firebase(firebaseUrl);
   var geoFire = new GeoFire(firebaseRef);
+  var geoQuery;
 
   // Feel free to watch items being added in Firebase
   $("#firebaseUrl").html("Observe Firebase in realtime at <a href='" + firebaseUrl + "'>" + firebaseUrl + "</a>");
@@ -20,26 +21,30 @@
     return false;
   });  
 
-  var geoQuery;
   $("#queryfish").on("submit", function() {
-
-    // We want to have only one query in place
-    // When creating new one - cancelling the old one
-    if (geoQuery != null) {
-      geoQuery.cancel();
-      log("cancelling old query");
-    }
-
     var lat = parseFloat($("#querylat").val());
     var lon = parseFloat($("#querylon").val());
     var radius = parseFloat($("#queryradius").val());
+    var operation;
 
-    geoQuery = geoFire.query({
-      center: [lat, lon],
-      radius: radius
-    });
+    if(geoQuery != null) {
+      operation = "updating";
 
-    log("creating a query [" + lat + "," + lon + "] with " + radius + "km radius")
+      geoQuery.updateCriteria({
+        center: [lat, lon],
+        radius: radius
+      });
+
+    } else {
+      operation = "creating";
+
+      geoQuery = geoFire.query({
+        center: [lat, lon],
+        radius: radius
+      });
+    }
+
+    log(operation + " a query [" + lat + "," + lon + "] with " + radius + "km radius")
 
     geoQuery.on("key_entered", function(key, location, distance) {
       log(key + " is located " + location + " is within the query (" + distance + " km from center)");
